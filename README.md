@@ -1,66 +1,50 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Thought Process
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Planning the overview. What the project will be like. It's an e-learn app for students and professors. Students can log in and choose their classes. Professors can log in and build their classes/lessons. When a student logs in, it will show a list of classes. When he chooses a class, it will show the info about that class with the lessons. He can see the lesson.
 
-## About Laravel
+**OBS:** Since this is only for demonstration purposes, I will not use API versioning.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Setting up the basic structure:
+   - Models: User, Classes, Lessons  
+     For each of those we initially are going to need:
+     - controller
+     - factory
+     - migration
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+For each model, set up the basic column structure and relationships.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Build the login/register feature. We will use Sanctum for that.
 
-## Learning Laravel
+Build tests for the register feature first.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Build login tests.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+Build a User resource so we can return the user information when necessary (like when we log in). That way, we can select what information we will show to the API.  
+At the same time, build a basic payload structure. For that, I'll use the JSON:API specification.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Now that the register and login scaffold is done, I’ll build what the user sees when they log in, which is the course list (the redirection is done by the frontend since we are only building the API for resources).
 
-## Laravel Sponsors
+So I build 1 test (it could be done in two tests since I'm asserting two things): one for testing the "courses show" payload, making sure it returns the CourseResource and that it is paginated.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+When I made the controller index method implementation, I made sure I eager loaded the user class so we don't have the N+1 problem.
 
-### Premium Partners
+After that, I moved on to build the course/show. Again, starting with the tests. For this, I used tests that would check if the authenticated user could retrieve a single course, the response containing the correct JSON structure, and a 404 if the course doesn't exist.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+The next endpoint I created was the `POST /courses`, where you could store a course. But since only professors could create a post, I also implemented the policy for that. I started with the test first: Professors can create courses, students can't. I also made sure that unauthorized users also couldn't create a course.
 
-## Contributing
+The same logic was built toward updating and deleting. Only teachers could delete/update, and it had to be their course.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+The same CRUD logic and steps are applied to the lessons. But I only developed the create method because I had personal issues.
 
-## Code of Conduct
+I still wanted to implement and test some things, but because of that issue, I couldn't.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
 
-## Security Vulnerabilities
+## What still needed to be done:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- After making all tests and implementing all the logic for it, I would create the endpoints on Postman to make sure the payloads were returning correct formats and data.
+- I also thought it would be better for the story that the professor could only see their own classes in the index (it could be done in another route, but I thought it would fit better for this example).
+- If a course is deleted, all of the lessons would also be deleted (make a test for that).
+- Instead of writing every single payload response, I could standardize it by building a custom macro or base resource.
+- Should add the link in CourseResource.
+- When showing the course, it should also show the lessons, but not in the index.
